@@ -2,40 +2,85 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Trader PRO</title>
+<title>Over 1.5 PRO</title>
+
 <style>
-body { background:#000; color:#fff; font-family:Arial; padding:20px; }
-.card { background:#111; padding:15px; margin:10px; border-radius:10px; }
+body {
+  background: #0f172a;
+  color: white;
+  font-family: Arial;
+  padding: 20px;
+}
+
+h1 {
+  color: #facc15;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
+  gap: 15px;
+}
+
+.card {
+  background: #1e293b;
+  padding: 15px;
+  border-radius: 12px;
+  border-left: 5px solid #22c55e;
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: scale(1.03);
+}
+
+.top {
+  border-left: 5px solid gold;
+}
+
+.odd {
+  font-size: 20px;
+  color: #22c55e;
+}
+
+.signal {
+  font-weight: bold;
+  margin-top: 8px;
+}
 </style>
 </head>
 
 <body>
 
-<h1>🔥 TRADER OVER 1.5</h1>
-<div id="app"></div>
+<h1>🔥 OVER 1.5 ANALYZER PRO</h1>
+<div class="container" id="games"></div>
 
 <script>
-async function load(){
+async function load() {
   const res = await fetch('/games');
   const data = await res.json();
 
-  const app = document.getElementById('app');
-  app.innerHTML='';
+  const container = document.getElementById('games');
+  container.innerHTML = '';
 
-  data.forEach(g=>{
-    app.innerHTML += `
-      <div class="card">
-        <b>${g.home} vs ${g.away}</b><br>
-        Min: ${g.minute}<br>
-        Gols: ${g.goals}<br>
-        Odd: ${g.odds}<br>
-        <b>${g.signal}</b>
-      </div>
+  data.forEach((g, i) => {
+    const div = document.createElement('div');
+    div.className = 'card ' + (i === 0 ? 'top' : '');
+
+    div.innerHTML = `
+      <h3>#${i+1} ${g.home} vs ${g.away}</h3>
+      <p>Min: ${g.minute}</p>
+      <p>Gols: ${g.goals}</p>
+      <p>Pressão: ${g.pressure}%</p>
+      <p class="odd">Odd: ${g.odds}</p>
+      <div class="signal">${g.signal}</div>
     `;
+
+    container.appendChild(div);
   });
 }
 
-setInterval(load,3000);
+setInterval(load, 5000);
 load();
 </script>
 
