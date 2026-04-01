@@ -18,7 +18,7 @@ h1 {
 
 .container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px,1fr));
   gap: 20px;
 }
 
@@ -27,32 +27,16 @@ h1 {
   padding: 20px;
   border-radius: 15px;
   border: 1px solid #1f2937;
-  transition: 0.3s;
 }
 
-.card:hover {
-  transform: scale(1.03);
-}
-
-.odds {
+.odd {
   color: #22c55e;
   font-size: 22px;
-  font-weight: bold;
 }
 
 .signal {
   margin-top: 10px;
-  font-size: 18px;
-}
-
-.badge {
-  background: #facc15;
-  color: black;
-  padding: 5px 10px;
-  border-radius: 10px;
-  font-size: 12px;
-  display: inline-block;
-  margin-bottom: 10px;
+  font-weight: bold;
 }
 </style>
 </head>
@@ -64,7 +48,7 @@ h1 {
 <div class="container" id="games"></div>
 
 <script>
-async function loadGames() {
+async function load() {
   const res = await fetch('/games');
   const data = await res.json();
 
@@ -72,25 +56,21 @@ async function loadGames() {
   container.innerHTML = '';
 
   data.forEach(g => {
-    const el = document.createElement('div');
-    el.className = 'card';
-
-    el.innerHTML = `
-      <div class="badge">TOP</div>
-      <h2>${g.home} vs ${g.away}</h2>
-      <p>Min: ${g.minute}</p>
-      <p>Gols: ${g.goals}</p>
-      <p>Pressão: ${g.pressure}%</p>
-      <p class="odds">Over 1.5: ${g.odds}</p>
-      <div class="signal">${g.signal}</div>
+    container.innerHTML += `
+      <div class="card">
+        <h2>${g.home} vs ${g.away}</h2>
+        <p>Min: ${g.minute}</p>
+        <p>Gols: ${g.goals}</p>
+        <p class="odd">Odd: ${g.odds}</p>
+        <p>Pressão: ${g.pressure}%</p>
+        <p class="signal">${g.signal}</p>
+      </div>
     `;
-
-    container.appendChild(el);
   });
 }
 
-setInterval(loadGames, 5000);
-loadGames();
+setInterval(load, 5000);
+load();
 </script>
 
 </body>
