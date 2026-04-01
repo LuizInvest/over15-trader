@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Betfair Analyzer Pro</title>
+<title>Betfair Analyzer PRO</title>
 
 <style>
 body {
@@ -27,11 +27,22 @@ h1 {
   padding: 20px;
   border-radius: 15px;
   border: 1px solid #1f2937;
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: scale(1.03);
 }
 
 .odds {
   color: #22c55e;
   font-size: 22px;
+  font-weight: bold;
+}
+
+.signal {
+  margin-top: 10px;
+  font-size: 18px;
 }
 
 .badge {
@@ -40,8 +51,9 @@ h1 {
   padding: 5px 10px;
   border-radius: 10px;
   font-size: 12px;
+  display: inline-block;
+  margin-bottom: 10px;
 }
-
 </style>
 </head>
 
@@ -70,7 +82,7 @@ async function loadGames() {
       <p>Gols: ${g.goals}</p>
       <p>Pressão: ${g.pressure}%</p>
       <p class="odds">Over 1.5: ${g.odds}</p>
-      <b>${g.signal}</b>
+      <div class="signal">${g.signal}</div>
     `;
 
     container.appendChild(el);
