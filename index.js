@@ -11,16 +11,21 @@ const PORT = process.env.PORT || 3000;
 
 let games = [];
 
-// Buscar jogos do dia
+// Buscar jogos reais
 async function fetchGames() {
-  const today = new Date().toISOString().split('T')[0];
+  try {
+    const today = new Date().toISOString().split('T')[0];
 
-  const res = await fetch(`${API_URL}/fixtures?date=${today}`, {
-    headers: { 'X-Api-Key': API_KEY }
-  });
+    const res = await fetch(`${API_URL}/fixtures?date=${today}`, {
+      headers: { 'X-Api-Key': API_KEY }
+    });
 
-  const data = await res.json();
-  return data.response || [];
+    const data = await res.json();
+    return data.response || [];
+  } catch (e) {
+    console.error("Erro ao buscar API");
+    return [];
+  }
 }
 
 // IA simples
@@ -38,64 +43,47 @@ function analyze(g) {
   return { minute, goals, pressure, signal };
 }
 
-// SYNC COM FALLBACK (GARANTE JOGOS)
+// Atualização com fallback
 async function sync() {
-  try {
-    const raw = await fetchGames();
+  const raw = await fetchGames();
 
-    if (!raw || raw.length === 0) {
-      games = [
-        {
-          id: 1,
-          home: "Flamengo",
-          away: "Palmeiras",
-          goals: { home: 0, away: 0 },
-          minute: 12,
-          pressure: 75,
-          signal: "ENTRAR AGORA"
-        },
-        {
-          id: 2,
-          home: "Barcelona",
-          away: "Valencia",
-          goals: { home: 1, away: 0 },
-          minute: 30,
-          pressure: 55,
-          signal: "AGUARDAR"
-        }
-      ];
-      return;
-    }
-
-    games = raw.slice(0, 5).map(g => {
-      const a = analyze(g);
-
-      return {
-        id: g.fixture.id,
-        home: g.teams.home.name,
-        away: g.teams.away.name,
-        goals: g.goals,
-        minute: a.minute,
-        pressure: a.pressure,
-        signal: a.signal
-      };
-    });
-
-  } catch (e) {
-    console.error("Erro API, usando fallback");
-
+  if (!raw || raw.length === 0) {
     games = [
       {
         id: 1,
-        home: "Corinthians",
-        away: "Santos",
+        home: "Flamengo",
+        away: "Palmeiras",
         goals: { home: 0, away: 0 },
-        minute: 10,
-        pressure: 80,
+        minute: 12,
+        pressure: 75,
         signal: "ENTRAR AGORA"
+      },
+      {
+        id: 2,
+        home: "Barcelona",
+        away: "Valencia",
+        goals: { home: 1, away: 0 },
+        minute: 30,
+        pressure: 55,
+        signal: "AGUARDAR"
       }
     ];
+    return;
   }
+
+  games = raw.slice(0, 5).map(g => {
+    const a = analyze(g);
+
+    return {
+      id: g.fixture.id,
+      home: g.teams.home.name,
+      away: g.teams.away.name,
+      goals: g.goals,
+      minute: a.minute,
+      pressure: a.pressure,
+      signal: a.signal
+    };
+  });
 }
 
 // Página
@@ -149,7 +137,7 @@ app.get('/live', (req, res) => {
   }, 5000);
 });
 
-// Atualização automática
+// Atualiza sempre
 setInterval(sync, 60000);
 
 // Start
