@@ -174,3 +174,34 @@ app.listen(PORT, () => {
   console.log('🔥 EXTREMO rodando...');
   sync();
 });
+import path from 'path';
+
+app.use(express.static('public'));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.resolve('public/index.html'));
+});
+app.get('/games', (req, res) => {
+  const fake = [
+    {
+      home: "Flamengo",
+      away: "Palmeiras",
+      minute: 12,
+      goals: "0-0",
+      pressure: 75,
+      odds: 1.35,
+      signal: "ENTRAR AGORA"
+    },
+    {
+      home: "Barcelona",
+      away: "Valencia",
+      minute: 30,
+      goals: "1-0",
+      pressure: 55,
+      odds: 1.28,
+      signal: "AGUARDAR"
+    }
+  ];
+
+  res.json(fake);
+});
