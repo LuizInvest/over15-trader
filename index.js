@@ -5,16 +5,17 @@ import path from 'path';
 
 const app = express();
 app.use(cors());
+
+const PORT = process.env.PORT || 3000;
+
+// SERVIR FRONT
 app.use(express.static('public'));
 
-const PORT = process.env.PORT || 10000;
-
-// Rota principal (carrega o layout bonito)
 app.get('/', (req, res) => {
   res.sendFile(path.resolve('public/index.html'));
 });
 
-// Dados fake (depois vamos colocar API real)
+// DADOS FAKE (TESTE)
 app.get('/games', (req, res) => {
   const games = [
     {
@@ -22,7 +23,7 @@ app.get('/games', (req, res) => {
       away: "Palmeiras",
       minute: 12,
       goals: "0-0",
-      pressure: 78,
+      pressure: 75,
       odds: 1.35,
       signal: "🔥 ENTRAR AGORA"
     },
@@ -32,24 +33,15 @@ app.get('/games', (req, res) => {
       minute: 30,
       goals: "1-0",
       pressure: 55,
-      odds: 1.28,
+      odds: 1.25,
       signal: "⏳ AGUARDAR"
-    },
-    {
-      home: "Real Madrid",
-      away: "Sevilla",
-      minute: 18,
-      goals: "0-0",
-      pressure: 82,
-      odds: 1.40,
-      signal: "🔥 ENTRAR AGORA"
     }
   ];
 
   res.json(games);
 });
 
-// Iniciar servidor
+// START
 app.listen(PORT, () => {
-  console.log('🔥 SERVIDOR RODANDO...');
+  console.log("🔥 SERVIDOR RODANDO...");
 });
