@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Betfair Analyzer Pro</title>
+
+<style>
+body {
+  background: #0b0f1a;
+  color: white;
+  font-family: Arial;
+  padding: 20px;
+}
+
+h1 {
+  color: #facc15;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: #111827;
+  padding: 20px;
+  border-radius: 15px;
+  border: 1px solid #1f2937;
+}
+
+.odds {
+  color: #22c55e;
+  font-size: 22px;
+}
+
+.badge {
+  background: #facc15;
+  color: black;
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🔥 Betfair Analyzer PRO</h1>
+
+<div class="container" id="games"></div>
+
+<script>
+async function loadGames() {
+  const res = await fetch('/games');
+  const data = await res.json();
+
+  const container = document.getElementById('games');
+  container.innerHTML = '';
+
+  data.forEach(g => {
+    const el = document.createElement('div');
+    el.className = 'card';
+
+    el.innerHTML = `
+      <div class="badge">TOP</div>
+      <h2>${g.home} vs ${g.away}</h2>
+      <p>Min: ${g.minute}</p>
+      <p>Gols: ${g.goals}</p>
+      <p>Pressão: ${g.pressure}%</p>
+      <p class="odds">Over 1.5: ${g.odds}</p>
+      <b>${g.signal}</b>
+    `;
+
+    container.appendChild(el);
+  });
+}
+
+setInterval(loadGames, 5000);
+loadGames();
+</script>
+
+</body>
+</html>
