@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
 });
 
 // =============================
-// BUSCAR JOGOS REAIS
+// BUSCAR JOGOS (AO VIVO + HOJE)
 // =============================
 app.get('/games', async (req, res) => {
   try {
@@ -36,15 +36,22 @@ app.get('/games', async (req, res) => {
 
     const data = await response.json();
 
-    if (!data.response) {
-      return res.json([]);
-    }
+    if (!data.response) return res.json([]);
 
-    // =============================
-    // FILTRO INTELIGENTE (IA SIMPLES)
-    // =============================
     const games = data.response
-      .filter(g => g.fixture.status.elapsed !== null) // apenas jogos iniciados
+
+      // 🔥 FILTRO: AO VIVO + NÃO INICIADOS
+      .filter(g => {
+        const status = g.fixture.status.short;
+
+        return (
+          status === "1H" ||
+          status === "2H" ||
+          status === "HT" ||
+          status === "NS"
+        );
+      })
+
       .map(g => {
         const minute = g.fixture.status.elapsed || 0;
         const homeGoals = g.goals.home ?? 0;
@@ -55,11 +62,18 @@ app.get('/games', async (req, res) => {
 
         let signal = '⏳ AGUARDAR';
 
+        // 🔥 AO VIVO
         if (minute >= 8 && minute <= 30 && totalGoals === 0 && pressure > 65) {
           signal = '🔥 ENTRAR AGORA';
         }
 
-        if (minute > 30 && totalGoals === 0) {
+        // 🚀 PRÉ-JOGO
+        if (minute === 0 && pressure > 70) {
+          signal = '🚀 PRÉ-JOGO FORTE';
+        }
+
+        // ⚠️ RISCO
+        if (minute > 35 && totalGoals === 0) {
           signal = '⚠️ RISCO';
         }
 
@@ -67,14 +81,16 @@ app.get('/games', async (req, res) => {
           home: g.teams.home.name,
           away: g.teams.away.name,
           minute: minute,
+          time: new Date(g.fixture.date).toLocaleTimeString(),
           goals: `${homeGoals} - ${awayGoals}`,
           odds: (Math.random() * 0.4 + 1.20).toFixed(2),
           pressure: pressure,
           signal: signal
         };
       })
-      .sort((a, b) => b.pressure - a.pressure) // melhores primeiro
-      .slice(0, 8); // top 8 jogos
+
+      .sort((a, b) => b.pressure - a.pressure)
+      .slice(0, 10);
 
     res.json(games);
 
