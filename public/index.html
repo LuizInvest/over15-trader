@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <title>Over 1.5 PRO</title>
@@ -14,6 +14,7 @@ body {
 
 h1 {
   color: #facc15;
+  margin-bottom: 20px;
 }
 
 .container {
@@ -47,12 +48,21 @@ h1 {
   font-weight: bold;
   margin-top: 8px;
 }
+
+.live {
+  color: #22c55e;
+}
+
+.pregame {
+  color: #60a5fa;
+}
 </style>
 </head>
 
 <body>
 
 <h1>🔥 OVER 1.5 ANALYZER PRO</h1>
+
 <div class="container" id="games"></div>
 
 <script>
@@ -69,10 +79,16 @@ async function load() {
 
     div.innerHTML = `
       <h3>#${i+1} ${g.home} vs ${g.away}</h3>
-      <p>Min: ${g.minute}</p>
-      <p>Gols: ${g.goals}</p>
+
+      <p class="${g.minute > 0 ? 'live' : 'pregame'}">
+        ${g.minute > 0 ? 'AO VIVO - Min ' + g.minute : 'INÍCIO: ' + g.time}
+      </p>
+
+      <p>Placar: ${g.goals}</p>
       <p>Pressão: ${g.pressure}%</p>
+
       <p class="odd">Odd: ${g.odds}</p>
+
       <div class="signal">${g.signal}</div>
     `;
 
@@ -80,6 +96,7 @@ async function load() {
   });
 }
 
+// Atualiza automático
 setInterval(load, 5000);
 load();
 </script>
