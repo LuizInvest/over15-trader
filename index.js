@@ -9,20 +9,21 @@ app.use(cors());
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.API_FOOTBALL_KEY;
 
+// FRONT
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
-// 🔥 BUSCA COM FALLBACK
+// 🔥 BUSCA COM FALLBACK (FUNCIONA NO FREE)
 async function fetchGames() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0'];
 
   const urls = [
     `https://v3.football.api-sports.io/fixtures?date=${today}`,
     `https://v3.football.api-sports.io/fixtures?season=2024&date=${today}`,
-    `https://v3.football.api-sports.io/fixtures?league=39&season=2024`,
+    `https://v3.football.api-sports.io/fixtures?league=39&season=2024`
   ];
 
   for (let url of urls) {
@@ -58,6 +59,14 @@ app.get('/games', async (req, res) => {
       const minute = g.fixture.status.elapsed || 0;
       const homeGoals = g.goals.home ?? 0;
       const awayGoals = g.goals.away ?? 0;
+      const totalGoals = homeGoals + awayGoals;
+
+      let probability = 50;
+
+      if (minute > 10) probability += 10;
+      if (minute > 20) probability += 10;
+      if (totalGoals === 1) probability += 20;
+      if (totalGoals >= 2) probability = 95;
 
       return {
         league: g.league.name,
@@ -66,7 +75,7 @@ app.get('/games', async (req, res) => {
         minute,
         time: new Date(g.fixture.date).toLocaleTimeString(),
         goals: `${homeGoals} - ${awayGoals}`,
-        status: g.fixture.status.short
+        probability
       };
     });
 
