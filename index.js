@@ -2,25 +2,11 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Trader Over 1.5 PRO</title>
+<title>Trader Over 1.5 PRO+</title>
 
 <style>
 body { background:#0f172a; color:white; font-family:Arial; padding:20px; }
 h1 { color:#22c55e; }
-
-.container { display:grid; gap:10px; }
-
-.card {
-  background:#1e293b;
-  padding:15px;
-  border-left:5px solid #334155;
-}
-
-.green { border-left:5px solid #22c55e; }
-.orange { border-left:5px solid orange; }
-.red { border-left:5px solid red; }
-
-.top { border:2px solid gold; }
 
 textarea {
   width:100%;
@@ -39,27 +25,43 @@ button {
   cursor:pointer;
   margin-bottom:20px;
 }
+
+.card {
+  background:#1e293b;
+  padding:15px;
+  margin-bottom:10px;
+  border-left:5px solid #334155;
+}
+
+.green { border-left:5px solid #22c55e; }
+.orange { border-left:5px solid orange; }
+.red { border-left:5px solid red; }
+
+.top { border:2px solid gold; }
+
 </style>
 </head>
 
 <body>
 
-<h1>🔥 TRADER OVER 1.5 PRO</h1>
+<h1>🔥 TRADER OVER 1.5 PRO+</h1>
 
-<textarea id="input" placeholder="Cole os jogos (ex: Flamengo x Palmeiras 12' 0-0 odd 1.35)"></textarea>
+<textarea id="input" placeholder="Ex: Flamengo x Palmeiras 12' 0-0 odd 1.35"></textarea>
 <button onclick="analisar()">ANALISAR</button>
 
 <h2>🏆 TOP 3 ENTRADAS</h2>
 <div id="top"></div>
 
+<h2>💰 MÚLTIPLA AUTOMÁTICA</h2>
+<div id="multipla"></div>
+
 <h2>📊 TODOS OS JOGOS</h2>
-<div class="container" id="lista"></div>
+<div id="lista"></div>
 
 <script>
 
 function analisar() {
   const texto = document.getElementById('input').value;
-
   const linhas = texto.split('\n');
   let jogos = [];
 
@@ -81,10 +83,10 @@ function analisar() {
   });
 
   jogos = jogos.map(j => analisarJogo(j));
-
   jogos.sort((a,b)=>b.score-a.score);
 
   renderTop(jogos.slice(0,3));
+  renderMultipla(jogos.slice(0,3));
   renderLista(jogos);
 }
 
@@ -92,7 +94,6 @@ function analisar() {
 function analisarJogo(j) {
 
   let score = 0;
-
   const total = j.homeGoals + j.awayGoals;
 
   if (j.minute >= 10 && j.minute <= 30) score += 25;
@@ -102,12 +103,12 @@ function analisarJogo(j) {
   if (j.minute >= 20) score += 10;
 
   let sinal = "AGUARDAR";
-
   if (score >= 60) sinal = "🔥 ENTRAR";
 
   return { ...j, score, sinal };
 }
 
+// 🏆 TOP 3
 function renderTop(jogos) {
   const div = document.getElementById('top');
   div.innerHTML = '';
@@ -124,6 +125,31 @@ function renderTop(jogos) {
   });
 }
 
+// 💰 MÚLTIPLA
+function renderMultipla(jogos) {
+  const div = document.getElementById('multipla');
+  div.innerHTML = '';
+
+  let oddTotal = 1;
+
+  jogos.forEach(j => {
+    oddTotal *= j.odd;
+
+    div.innerHTML += `
+      <div class="card">
+        ${j.home} vs ${j.away} → odd ${j.odd}
+      </div>
+    `;
+  });
+
+  div.innerHTML += `
+    <div class="card green">
+      <h2>🔥 Odd Total: ${oddTotal.toFixed(2)}</h2>
+    </div>
+  `;
+}
+
+// 📊 LISTA COMPLETA
 function renderLista(jogos) {
   const div = document.getElementById('lista');
   div.innerHTML = '';
