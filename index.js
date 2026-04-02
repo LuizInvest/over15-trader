@@ -16,9 +16,9 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
-// 🔥 BUSCA COM FALLBACK (FUNCIONA NO FREE)
+// 🔥 BUSCA COM FALLBACK
 async function fetchGames() {
-  const today = new Date().toISOString().split('T')[0'];
+  const today = new Date().toISOString().split('T')[0];
 
   const urls = [
     `https://v3.football.api-sports.io/fixtures?date=${today}`,
