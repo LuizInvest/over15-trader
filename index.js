@@ -9,18 +9,14 @@ app.use(cors());
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.API_FOOTBALL_KEY;
 
-// =============================
-// SERVIR FRONTEND
-// =============================
+// FRONT
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
-// =============================
-// BUSCAR JOGOS (AO VIVO + HOJE)
-// =============================
+// TODOS JOGOS DO DIA (SEM FILTRO)
 app.get('/games', async (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0];
@@ -28,9 +24,7 @@ app.get('/games', async (req, res) => {
     const response = await fetch(
       `https://v3.football.api-sports.io/fixtures?date=${today}`,
       {
-        headers: {
-          'X-Api-Key': API_KEY
-        }
+        headers: { 'X-Api-Key': API_KEY }
       }
     );
 
@@ -38,71 +32,40 @@ app.get('/games', async (req, res) => {
 
     if (!data.response) return res.json([]);
 
-    const games = data.response
+    const games = data.response.map(g => {
+      const minute = g.fixture.status.elapsed || 0;
+      const homeGoals = g.goals.home ?? 0;
+      const awayGoals = g.goals.away ?? 0;
+      const totalGoals = homeGoals + awayGoals;
 
-      // 🔥 FILTRO: AO VIVO + NÃO INICIADOS
-      .filter(g => {
-        const status = g.fixture.status.short;
+      // SIMULAÇÃO PROBABILIDADE OVER 1.5
+      let probability = 50;
 
-        return (
-          status === "1H" ||
-          status === "2H" ||
-          status === "HT" ||
-          status === "NS"
-        );
-      })
+      if (minute > 10) probability += 10;
+      if (minute > 20) probability += 10;
+      if (totalGoals === 1) probability += 20;
+      if (totalGoals >= 2) probability = 95;
 
-      .map(g => {
-        const minute = g.fixture.status.elapsed || 0;
-        const homeGoals = g.goals.home ?? 0;
-        const awayGoals = g.goals.away ?? 0;
-        const totalGoals = homeGoals + awayGoals;
-
-        const pressure = Math.floor(Math.random() * 100);
-
-        let signal = '⏳ AGUARDAR';
-
-        // 🔥 AO VIVO
-        if (minute >= 8 && minute <= 30 && totalGoals === 0 && pressure > 65) {
-          signal = '🔥 ENTRAR AGORA';
-        }
-
-        // 🚀 PRÉ-JOGO
-        if (minute === 0 && pressure > 70) {
-          signal = '🚀 PRÉ-JOGO FORTE';
-        }
-
-        // ⚠️ RISCO
-        if (minute > 35 && totalGoals === 0) {
-          signal = '⚠️ RISCO';
-        }
-
-        return {
-          home: g.teams.home.name,
-          away: g.teams.away.name,
-          minute: minute,
-          time: new Date(g.fixture.date).toLocaleTimeString(),
-          goals: `${homeGoals} - ${awayGoals}`,
-          odds: (Math.random() * 0.4 + 1.20).toFixed(2),
-          pressure: pressure,
-          signal: signal
-        };
-      })
-
-      .sort((a, b) => b.pressure - a.pressure)
-      .slice(0, 10);
+      return {
+        league: g.league.name,
+        home: g.teams.home.name,
+        away: g.teams.away.name,
+        status: g.fixture.status.short,
+        minute: minute,
+        time: new Date(g.fixture.date).toLocaleTimeString(),
+        goals: `${homeGoals} - ${awayGoals}`,
+        probability: probability
+      };
+    });
 
     res.json(games);
 
   } catch (error) {
-    console.log('Erro API:', error);
+    console.log(error);
     res.json([]);
   }
 });
 
-// =============================
-// START SERVIDOR
-// =============================
 app.listen(PORT, () => {
   console.log('🔥 SERVIDOR RODANDO...');
 });
