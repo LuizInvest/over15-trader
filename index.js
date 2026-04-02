@@ -4,6 +4,7 @@ import path from 'path';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// servir frontend
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
@@ -11,5 +12,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log('🔥 SISTEMA OVER 1.5 ONLINE');
+  console.log('🔥 OVER 1.5 ANALYZER PRO ONLINE');
 });
