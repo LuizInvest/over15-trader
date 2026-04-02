@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
-// 🔥 BUSCA COM FALLBACK
+// 🔥 FUNÇÃO COM FALLBACK (GARANTE DADOS)
 async function fetchGames() {
   const today = new Date().toISOString().split('T')[0];
 
@@ -51,8 +51,11 @@ app.get('/games', async (req, res) => {
   try {
     const rawGames = await fetchGames();
 
+    // 🔥 SE NÃO VIER NADA → MOSTRA ERRO
     if (!rawGames.length) {
-      return res.json([{ erro: "SEM DADOS DA API" }]);
+      return res.json([
+        { erro: "SEM DADOS DA API - VERIFIQUE SUA CHAVE" }
+      ]);
     }
 
     const games = rawGames.map(g => {
@@ -73,6 +76,7 @@ app.get('/games', async (req, res) => {
         home: g.teams.home.name,
         away: g.teams.away.name,
         minute,
+        status: g.fixture.status.short,
         time: new Date(g.fixture.date).toLocaleTimeString(),
         goals: `${homeGoals} - ${awayGoals}`,
         probability
