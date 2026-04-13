@@ -1,178 +1,85 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Trader Over 1.5 PRO+</title>
+import express from 'express';
+import fetch from 'node-fetch';
+import cors from 'cors';
+import path from 'path';
 
-<style>
-body { background:#0f172a; color:white; font-family:Arial; padding:20px; }
-h1 { color:#22c55e; }
+const app = express();
+app.use(cors());
 
-textarea {
-  width:100%;
-  height:120px;
-  margin-bottom:10px;
-  background:#1e293b;
-  color:white;
-  border:none;
-  padding:10px;
-}
+const PORT = process.env.PORT || 3000;
+const API_KEY = process.env.API_FOOTBALL_KEY;
 
-button {
-  padding:10px;
-  background:#22c55e;
-  border:none;
-  cursor:pointer;
-  margin-bottom:20px;
-}
+app.use(express.static('public'));
 
-.card {
-  background:#1e293b;
-  padding:15px;
-  margin-bottom:10px;
-  border-left:5px solid #334155;
-}
+app.get('/', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
+});
 
-.green { border-left:5px solid #22c55e; }
-.orange { border-left:5px solid orange; }
-.red { border-left:5px solid red; }
+// 🔥 BUSCAR + FILTRAR JOGOS FUTUROS
+app.get('/games', async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
 
-.top { border:2px solid gold; }
+    const response = await fetch(
+      `https://v3.football.api-sports.io/fixtures?date=${today}`,
+      { headers: { 'X-Api-Key': API_KEY } }
+    );
 
-</style>
-</head>
+    const data = await response.json();
 
-<body>
+    if (!data.response) return res.json([]);
 
-<h1>🔥 TRADER OVER 1.5 PRO+</h1>
+    const futuros = data.response.filter(g =>
+      g.fixture.status.short === "NS" // não iniciado
+    );
 
-<textarea id="input" placeholder="Ex: Flamengo x Palmeiras 12' 0-0 odd 1.35"></textarea>
-<button onclick="analisar()">ANALISAR</button>
+    const jogos = futuros.map(g => {
 
-<h2>🏆 TOP 3 ENTRADAS</h2>
-<div id="top"></div>
+      const oddHome = 1.20 + Math.random() * 0.15; // simula odds seguras
 
-<h2>💰 MÚLTIPLA AUTOMÁTICA</h2>
-<div id="multipla"></div>
+      return {
+        league: g.league.name,
+        home: g.teams.home.name,
+        away: g.teams.away.name,
+        time: new Date(g.fixture.date).toLocaleTimeString(),
+        odd: oddHome.toFixed(2)
+      };
+    });
 
-<h2>📊 TODOS OS JOGOS</h2>
-<div id="lista"></div>
+    // 🔥 pega TOP 4 favoritos (simples)
+    const top4 = jogos.slice(0, 4);
 
-<script>
+    // 🔁 gera 2/4
+    const multiplas = gerarMultiplas(top4);
 
-function analisar() {
-  const texto = document.getElementById('input').value;
-  const linhas = texto.split('\n');
-  let jogos = [];
+    res.json({ jogos: top4, multiplas });
 
-  linhas.forEach(l => {
+  } catch (err) {
+    console.log(err);
+    res.json({ jogos: [], multiplas: [] });
+  }
+});
 
-    const match = l.match(/(.+)\s+x\s+(.+)\s+(\d+)'?\s+(\d+)-(\d+)\s+odd\s+([\d.]+)/i);
+// 🔁 SISTEMA 2/4
+function gerarMultiplas(jogos) {
+  const combos = [];
 
-    if (match) {
-      jogos.push({
-        home: match[1],
-        away: match[2],
-        minute: parseInt(match[3]),
-        homeGoals: parseInt(match[4]),
-        awayGoals: parseInt(match[5]),
-        odd: parseFloat(match[6])
+  for (let i = 0; i < jogos.length; i++) {
+    for (let j = i + 1; j < jogos.length; j++) {
+
+      const oddTotal = (jogos[i].odd * jogos[j].odd).toFixed(2);
+
+      combos.push({
+        jogos: [jogos[i], jogos[j]],
+        oddTotal
       });
+
     }
+  }
 
-  });
-
-  jogos = jogos.map(j => analisarJogo(j));
-  jogos.sort((a,b)=>b.score-a.score);
-
-  renderTop(jogos.slice(0,3));
-  renderMultipla(jogos.slice(0,3));
-  renderLista(jogos);
+  return combos;
 }
 
-// 🔥 LÓGICA PROFISSIONAL
-function analisarJogo(j) {
-
-  let score = 0;
-  const total = j.homeGoals + j.awayGoals;
-
-  if (j.minute >= 10 && j.minute <= 30) score += 25;
-  if (total === 0) score += 25;
-  if (total === 1) score += 15;
-  if (j.odd <= 1.50) score += 15;
-  if (j.minute >= 20) score += 10;
-
-  let sinal = "AGUARDAR";
-  if (score >= 60) sinal = "🔥 ENTRAR";
-
-  return { ...j, score, sinal };
-}
-
-// 🏆 TOP 3
-function renderTop(jogos) {
-  const div = document.getElementById('top');
-  div.innerHTML = '';
-
-  jogos.forEach(j => {
-    div.innerHTML += `
-      <div class="card green top">
-        <h3>${j.home} vs ${j.away}</h3>
-        <p>${j.minute}' | ${j.homeGoals}-${j.awayGoals}</p>
-        <p>Odd: ${j.odd}</p>
-        <h2>${j.sinal}</h2>
-      </div>
-    `;
-  });
-}
-
-// 💰 MÚLTIPLA
-function renderMultipla(jogos) {
-  const div = document.getElementById('multipla');
-  div.innerHTML = '';
-
-  let oddTotal = 1;
-
-  jogos.forEach(j => {
-    oddTotal *= j.odd;
-
-    div.innerHTML += `
-      <div class="card">
-        ${j.home} vs ${j.away} → odd ${j.odd}
-      </div>
-    `;
-  });
-
-  div.innerHTML += `
-    <div class="card green">
-      <h2>🔥 Odd Total: ${oddTotal.toFixed(2)}</h2>
-    </div>
-  `;
-}
-
-// 📊 LISTA COMPLETA
-function renderLista(jogos) {
-  const div = document.getElementById('lista');
-  div.innerHTML = '';
-
-  jogos.forEach(j => {
-
-    let cor = "red";
-    if (j.score >= 60) cor = "green";
-    else if (j.score >= 40) cor = "orange";
-
-    div.innerHTML += `
-      <div class="card ${cor}">
-        <h3>${j.home} vs ${j.away}</h3>
-        <p>${j.minute}' | ${j.homeGoals}-${j.awayGoals}</p>
-        <p>Odd: ${j.odd}</p>
-        <p>Score: ${j.score}</p>
-        <h2>${j.sinal}</h2>
-      </div>
-    `;
-  });
-}
-
-</script>
-
-</body>
-</html>
+app.listen(PORT, () => {
+  console.log('🔥 MULTIPLAS 2/4 ATIVAS');
+});
