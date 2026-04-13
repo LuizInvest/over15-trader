@@ -2,142 +2,74 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Over 1.5 Trader PRO</title>
+<title>Trader Múltiplas Safe</title>
 
 <style>
-body {
-  background: #0f172a;
-  color: white;
-  font-family: Arial;
-  padding: 20px;
-}
-
-h1 {
-  color: #22c55e;
-}
-
-.container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px,1fr));
-  gap: 15px;
-}
+body { background:#0f172a; color:white; font-family:Arial; padding:20px; }
+h1 { color:#22c55e; }
 
 .card {
-  background: #1e293b;
-  padding: 15px;
-  border-radius: 12px;
-  border-left: 6px solid #334155;
+  background:#1e293b;
+  padding:15px;
+  margin-bottom:10px;
 }
 
-.green { border-left: 6px solid #22c55e; }
-.orange { border-left: 6px solid orange; }
-.red { border-left: 6px solid red; }
-
-.live {
-  color: #22c55e;
-  font-weight: bold;
-}
-
-.top {
-  border: 2px solid gold;
-}
+.green { border-left:5px solid #22c55e; }
 </style>
 </head>
 
 <body>
 
-<h1>🔥 OVER 1.5 ANALYZER PRO (SEM API)</h1>
+<h1>🔥 MÚLTIPLAS SAFE (2/4)</h1>
 
-<div class="container" id="games"></div>
+<button onclick="load()">🔄 Buscar Jogos</button>
+
+<h2>🎯 TOP 4 JOGOS</h2>
+<div id="jogos"></div>
+
+<h2>💰 6 MÚLTIPLAS</h2>
+<div id="multiplas"></div>
 
 <script>
 
-// 🔥 BASE FIXA DE JOGOS
-const games = [
-  { home: "Flamengo", away: "Palmeiras", minute: 0, homeGoals: 0, awayGoals: 0 },
-  { home: "Barcelona", away: "Valencia", minute: 0, homeGoals: 0, awayGoals: 0 },
-  { home: "Man City", away: "Chelsea", minute: 0, homeGoals: 0, awayGoals: 0 },
-  { home: "PSG", away: "Lyon", minute: 0, homeGoals: 0, awayGoals: 0 },
-  { home: "Bayern", away: "Dortmund", minute: 0, homeGoals: 0, awayGoals: 0 },
-  { home: "Inter", away: "Roma", minute: 0, homeGoals: 0, awayGoals: 0 }
-];
+async function load() {
+  const res = await fetch('/games');
+  const data = await res.json();
 
-// 🔄 ATUALIZAÇÃO REALISTA
-function updateGames() {
-  games.forEach(g => {
-
-    if (g.minute < 90) {
-      g.minute += Math.floor(Math.random() * 3);
-    }
-
-    // chance de gol
-    if (Math.random() > 0.93) {
-      if (Math.random() > 0.5) g.homeGoals++;
-      else g.awayGoals++;
-    }
-
-    const total = g.homeGoals + g.awayGoals;
-
-    g.pressure = Math.floor(Math.random() * 100);
-
-    g.probability = 50;
-
-    if (g.minute > 10) g.probability += 10;
-    if (g.minute > 25) g.probability += 10;
-    if (g.pressure > 70) g.probability += 15;
-    if (total === 1) g.probability += 20;
-    if (total >= 2) g.probability = 95;
-
-    g.signal = "AGUARDAR";
-
-    if (g.minute >= 10 && g.minute <= 30 && total === 0 && g.pressure > 65) {
-      g.signal = "🔥 ENTRAR AGORA";
-    }
-
-  });
+  renderJogos(data.jogos);
+  renderMultiplas(data.multiplas);
 }
 
-// 🎯 RANKING (MELHORES JOGOS)
-function getTopGames(list) {
-  return [...list].sort((a,b) => b.probability - a.probability);
-}
+function renderJogos(jogos) {
+  const div = document.getElementById('jogos');
+  div.innerHTML = '';
 
-// 🎨 RENDER
-function render() {
-  const container = document.getElementById('games');
-  container.innerHTML = '';
-
-  const sorted = getTopGames(games);
-
-  sorted.forEach((g, i) => {
-
-    let color = "red";
-    if (g.probability >= 80) color = "green";
-    else if (g.probability >= 60) color = "orange";
-
-    const div = document.createElement('div');
-    div.className = 'card ' + color + (i < 2 ? ' top' : '');
-
-    div.innerHTML = `
-      <h3>#${i+1} ${g.home} vs ${g.away}</h3>
-      <p class="live">AO VIVO - ${g.minute} min</p>
-      <p>Placar: ${g.homeGoals} - ${g.awayGoals}</p>
-      <p>Pressão: ${g.pressure}%</p>
-      <p><strong>Prob Over 1.5: ${g.probability}%</strong></p>
-      <h2>${g.signal}</h2>
+  jogos.forEach(j => {
+    div.innerHTML += `
+      <div class="card">
+        ${j.home} vs ${j.away}<br>
+        ${j.time} | odd ${j.odd}
+      </div>
     `;
-
-    container.appendChild(div);
   });
 }
 
-// ⏱ LOOP
-setInterval(() => {
-  updateGames();
-  render();
-}, 4000);
+function renderMultiplas(multiplas) {
+  const div = document.getElementById('multiplas');
+  div.innerHTML = '';
 
-render();
+  multiplas.forEach(m => {
+
+    div.innerHTML += `
+      <div class="card green">
+        ${m.jogos[0].home} + ${m.jogos[1].home}<br>
+        🔥 Odd: ${m.oddTotal}
+      </div>
+    `;
+  });
+}
+
+load();
 
 </script>
 
